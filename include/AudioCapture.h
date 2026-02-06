@@ -20,7 +20,7 @@ class WavWriter;
     #define PLATFORM_LINUX
 #endif
 
-class AudioCapture {
+class AudioCapture 
 public:
     AudioCapture();
     virtual ~AudioCapture();
@@ -32,7 +32,7 @@ public:
     protected:
     void cleanup();
     virtual void audioThread() = 0;
-    void AudioCapture::startInternal();
+    void startInternal();
 
     std::string m_outputFile;
 
@@ -57,4 +57,4 @@ public:
     std::atomic<bool> m_bRunning;
     static void audioThreadProc(AudioCapture* pThis);
 #endif
-};
+;
