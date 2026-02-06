@@ -1,17 +1,9 @@
-
-PS C:\Users\ausco\audio-capture\build> .\audio-capture.exe
-Starting audio capture...
-Failed to start microphone capture
-PS C:\Users\ausco\audio-capture\build> .\audio-capture.exe
-Starting audio capture...
-Failed to start microphone capture
+> cmake --build .    
+[ 14%] Building CXX object CMakeFiles/audio-capture.dir/src/MicCapture.cpp.obj
+[ 28%] Linking CXX executable audio-capture.exe
+C:/ProgramData/mingw64/mingw64/bin/../lib/gcc/x86_64-w64-mingw32/15.2.0/../../../../x86_64-w64-mingw32/bin/ld.exe: CMakeFiles\audio-capture.dir/objects.a(MicCapture.cpp.obj):MicCapture.cpp:(.rdata$_ZTV10MicCapture[_ZTV10MicCapture]+0x38): undefined reference to `MicCapture::audioThread()'
+collect2.exe: error: ld returned 1 exit status
+mingw32-make[2]: *** [CMakeFiles\audio-capture.dir\build.make:187: audio-capture.exe] Error 1
+mingw32-make[1]: *** [CMakeFiles\Makefile2:86: CMakeFiles/audio-capture.dir/all] Error 2
+mingw32-make: *** [Makefile:90: all] Error 2
 PS C:\Users\ausco\audio-capture\build> 
-
-
-
-
-
-
-
-
-
