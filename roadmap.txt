@@ -1,0 +1,447 @@
+create this project
+Perfect, this assignment is **very well-defined**, and the interviewer is basically asking:
+
+> “Do you actually understand Windows audio at the OS level, or are you guessing?”
+
+I’ll answer your question **directly** first, then explain **why each tech is needed**, and finally show a **clean architecture** they expect.
+
+---
+
+# 🔧 Tech Stack You SHOULD Use (and be ready to justify)
+
+## 1️⃣ Core Language
+
+### ✅ **Modern C++ (C++17 or C++20)**
+
+Why:
+
+* Deterministic memory control (critical for audio)
+* RAII for safe resource management
+* Required for Windows audio APIs
+
+You’ll need:
+
+* Smart pointers
+* RAII wrappers for COM objects
+* No garbage collection, no JS
+
+---
+
+## 2️⃣ Windows Audio APIs (THIS IS THE CORE)
+
+### ✅ **WASAPI (Windows Audio Session API)**
+
+This is **mandatory in spirit**, even if not explicitly enforced.
+
+You will use **two different capture paths**:
+
+---
+
+### A️⃣ System Speaker Audio
+
+### 🔥 **WASAPI Loopback Capture**
+
+**This is the ONLY correct way** to capture system audio without app-specific SDKs.
+
+Tech:
+
+* `IMMDeviceEnumerator`
+* `IMMDevice`
+* `IAudioClient`
+* `IAudioCaptureClient`
+* `AUDCLNT_STREAMFLAGS_LOOPBACK`
+
+What it gives you:
+
+* Digital copy of speaker output
+* Works for Zoom, Meet, WhatsApp, browser, native apps
+* Captures audio **before** it reaches speakers
+* No duplication if done correctly
+
+📌 File output:
+
+* `speaker.wav`
+
+---
+
+### B️⃣ Microphone Audio
+
+### 🎙 **WASAPI Microphone Capture (Normal Capture Mode)**
+
+Tech:
+
+* Same WASAPI interfaces
+* But **NO loopback flag**
+* Capture from microphone endpoint directly
+
+Important:
+
+* Capture mic **only**
+* Do NOT mix speaker stream
+* Do NOT use stereo mix
+
+📌 File output:
+
+* `mic.wav`
+
+---
+
+## 3️⃣ Device Enumeration & Routing
+
+### ✅ **MMDevice API**
+
+Why it’s needed:
+
+* To select:
+
+  * Default speaker device
+  * Default microphone device
+* To avoid hardcoding devices
+
+Key interfaces:
+
+* `IMMDeviceEnumerator`
+* `IMMDeviceCollection`
+
+You must be able to explain:
+
+> “How did you choose the correct input/output device?”
+
+---
+
+## 4️⃣ Audio Isolation (MOST IMPORTANT PART)
+
+This is where most candidates fail.
+
+### ❌ What you must NOT use
+
+* Stereo Mix
+* “What U Hear”
+* Virtual meeting SDKs
+* Screen recording hacks
+
+---
+
+### ✅ How isolation is ACTUALLY achieved
+
+👉 **Key Insight (this is interview gold):**
+
+> WASAPI loopback captures **speaker output digitally**,
+> microphone capture reads **hardware mic input**,
+> therefore speaker audio **never enters mic.wav**.
+
+This is **OS-level isolation**, not DSP magic.
+
+You should say:
+
+* Loopback capture taps the render stream
+* Mic capture taps the capture endpoint
+* No acoustic path involved
+
+📌 If echo still occurs:
+
+* It’s acoustic (speaker sound leaking physically)
+* NOT a software bug
+
+---
+
+## 5️⃣ Audio Format Handling
+
+### ✅ WAV / PCM Writer (Custom or Minimal)
+
+You’ll need to:
+
+* Write WAV headers manually OR
+* Use a tiny header-only WAV writer (justified)
+
+You must include:
+
+* Sample rate (e.g., 48000)
+* Bit depth (16-bit or float)
+* Channels (mono/stereo)
+
+Tech involved:
+
+* PCM buffers
+* Interleaved samples
+* Endianness (little-endian)
+
+---
+
+## 6️⃣ Threading Model (Important but Simple)
+
+### ✅ Dedicated Capture Threads
+
+Why:
+
+* Audio callbacks must not block
+* File I/O must not block capture
+
+Typical setup:
+
+* Thread 1 → speaker capture
+* Thread 2 → mic capture
+* Lock-free queue or ring buffer
+* Writer thread flushes to disk
+
+❌ Avoid:
+
+* `malloc` in audio loop
+* mutex in audio callback
+
+---
+
+## 7️⃣ Build System
+
+### ✅ **CMake**
+
+Why:
+
+* Cross-platform friendly
+* Explicitly mentioned as “good to have”
+* Professional signal
+
+---
+
+## 8️⃣ Debug & Validation Tools (mention in README)
+
+You don’t code these, but mention:
+
+* Audacity (to verify no overlap)
+* Headphones test
+* Silent mic test
+* Echo stress test
+
+---
+
+# 🧠 Expected Architecture (High-Level)
+
+```
+[ Speaker Device ]
+       ↓
+WASAPI Loopback Capture
+       ↓
+Speaker Buffer → speaker.wav
+
+
+[ Microphone Device ]
+       ↓
+WASAPI Mic Capture
+       ↓
+Mic Buffer → mic.wav
+```
+
+❗ **NO MIXING**
+❗ **NO DUPLICATION**
+❗ **NO SDKs**
+
+---
+
+# 🚨 If You Want Extra Credit
+
+Optional but impressive:
+
+* Document why AEC is NOT needed
+* Explain why physical echo ≠ software echo
+* Mention limitations (headphones vs speakers)
+
+---
+
+## Final Verdict — Tech You MUST Use
+
+✅ C++17+
+✅ WASAPI (loopback + mic)
+✅ MMDevice API
+✅ WAV / PCM handling
+✅ CMake
+✅ Multithreaded capture
+
+## **TL;DR**
+
+Your assignment is **pure C++ (console/CLI)** using **Windows APIs (WASAPI/MMDevice)**.
+No GUI or QML is required unless explicitly asked.
+Deliver a clean **C++ project + CMake build + README + WAV outputs**.
+
+---
+
+## **Concise Summary**
+
+The assignment expects:
+
+* Native **C++ implementation**
+* Windows audio capture via WASAPI
+* WAV file writing
+* Proper build system (preferably CMake)
+* No UI layer needed
+
+So the project should be **CPP-only**, structured like a professional native module.
+
+---
+
+## **Recommended Folder Structure**
+
+```bash
+audio-capture/
+│
+├── CMakeLists.txt
+├── README.md
+│
+├── include/              # Public headers
+│   ├── AudioCapture.h
+│   ├── LoopbackCapture.h
+│   ├── MicCapture.h
+│   ├── WavWriter.h
+│   └── Utils.h
+│
+├── src/                  # Implementation
+│   ├── main.cpp
+│   ├── AudioCapture.cpp
+│   ├── LoopbackCapture.cpp
+│   ├── MicCapture.cpp
+│   ├── WavWriter.cpp
+│   └── Utils.cpp
+│
+├── third_party/          # Optional minimal libs
+│   └── (only if needed)
+│
+├── build/                # Generated by CMake (ignored in git)
+│
+└── output/               # Generated wav files
+    ├── speaker.wav
+    └── mic.wav
+```
+
+---
+
+## **Deep Dive — Why This Structure Works**
+
+### 1. `include/`
+
+Contains all headers exposed across modules.
+
+Example:
+
+```cpp
+class LoopbackCapture {
+public:
+    bool start();
+    void stop();
+};
+```
+
+Keeps compilation clean and modular.
+
+---
+
+### 2. `src/`
+
+Actual logic implementation.
+
+Split responsibilities:
+
+* Loopback capture
+* Mic capture
+* WAV writing
+* Utilities
+
+Avoid monolithic `main.cpp`.
+
+---
+
+### 3. `main.cpp`
+
+Only orchestrates:
+
+```cpp
+int main() {
+    LoopbackCapture speaker;
+    MicCapture mic;
+
+    speaker.start();
+    mic.start();
+
+    Sleep(10000);
+
+    speaker.stop();
+    mic.stop();
+}
+```
+
+---
+
+### 4. `output/`
+
+Assignment requires WAV files — keep them separate.
+
+Never mix generated files with source.
+
+---
+
+### 5. `third_party/`
+
+Only if you use:
+
+* minimal WAV helpers
+* COM wrappers
+* tiny utilities
+
+Avoid heavy dependencies.
+
+---
+
+### 6. `CMakeLists.txt`
+
+Expected in modern C++ roles.
+
+Lets interviewer build via:
+
+```bash
+mkdir build
+cd build
+cmake ..
+cmake --build .
+```
+
+---
+
+## **Does Assignment Require UI?**
+
+| Component   | Required? |
+| ----------- | --------- |
+| GUI / UI    | ❌ No      |
+| Qt/QML      | ❌ No      |
+| Electron    | ❌ No      |
+| Console app | ✅ Yes     |
+| WAV output  | ✅ Yes     |
+
+If UI was required, assignment would explicitly say so.
+
+---
+
+## **Use Cases — What Interviewer Checks**
+
+They will check:
+
+| Area             | What They Look For   |
+| ---------------- | -------------------- |
+| Structure        | Modular code         |
+| Resource mgmt    | COM + RAII           |
+| Threading        | Stable capture       |
+| Audio separation | No duplication       |
+| Clean build      | CMake or VS solution |
+
+---
+
+## **Professional Tip (Important)**
+
+Most candidates submit:
+
+```
+main.cpp (2000 lines)
+```
+
+Immediate rejection.
+
+Clean architecture = big advantage.
+
+---
