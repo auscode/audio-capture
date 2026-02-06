@@ -1,57 +1,17 @@
-PS C:\Users\ausco\audio-capture\build> cmake --build .
-[ 14%] Building CXX object CMakeFiles/audio-capture.dir/src/main.cpp.obj
-In file included from C:/Users/ausco/audio-capture/include/MicCapture.h:3,
-                 from C:\Users\ausco\audio-capture\src\main.cpp:5:
-C:/Users/ausco/audio-capture/include/AudioCapture.h:24:1: error: expected unqualified-id before 'public'
-   24 | public:
-      | ^~~~~~
-C:/Users/ausco/audio-capture/include/AudioCapture.h:26:13: error: declaration of '~ AudioCapture' as non-member
-   26 |     virtual ~AudioCapture();
-      |             ^~~~~~~~~~~~~
-C:/Users/ausco/audio-capture/include/AudioCapture.h:28:5: error: 'virtual' outside class declaration
-   28 |     virtual bool start() = 0;
-      |     ^~~~~~~
-C:/Users/ausco/audio-capture/include/AudioCapture.h:28:18: error: function 'bool start()' is initialized like a variable
-   28 |     virtual bool start() = 0;
-      |                  ^~~~~
-C:/Users/ausco/audio-capture/include/AudioCapture.h:29:5: error: 'virtual' outside class declaration
-   29 |     virtual void stop() = 0;
-      |     ^~~~~~~
-C:/Users/ausco/audio-capture/include/AudioCapture.h:29:18: error: function 'void stop()' is initialized like a variable
 
-
-      |     ^~~~~~~
-C:/Users/ausco/audio-capture/include/AudioCapture.h:30:30: error: non-member function 'bool isRunning()' cannot have cv-qualifier
-   30 |     virtual bool isRunning() const;
-      |                              ^~~~~
-C:/Users/ausco/audio-capture/include/AudioCapture.h:32:5: error: expected unqualified-id before 'protected'
-   32 |     protected:
-      |     ^~~~~~~~~
-C:/Users/ausco/audio-capture/include/AudioCapture.h:34:5: error: 'virtual' outside class declaration
-   34 |     virtual void audioThread() = 0;
-      |     ^~~~~~~
-C:/Users/ausco/audio-capture/include/AudioCapture.h:34:18: error: function 'void audioThread()' is initialized like a variable
-   34 |     virtual void audioThread() = 0;
-      |                  ^~~~~~~~~~~
-C:/Users/ausco/audio-capture/include/MicCapture.h:6:27: error: invalid use of incomplete type 'class AudioCapture'
-    6 | class MicCapture : public AudioCapture {
-      |                           ^~~~~~~~~~~~
-C:/Users/ausco/audio-capture/include/AudioCapture.h:23:7: note: forward declaration of 'class AudioCapture'
-   23 | class AudioCapture
-      |       ^~~~~~~~~~~~
-C:/Users/ausco/audio-capture/include/MicCapture.h:9:5: error: 'MicCapture::~MicCapture()' marked 'override', but does not override
-    9 |     ~MicCapture() override = default;
-      |     ^
-C:/Users/ausco/audio-capture/include/MicCapture.h:11:10: error: 'bool MicCapture::start()' marked 'override', but does not override
-   11 |     bool start() override;
-      |          ^~~~~
-C:/Users/ausco/audio-capture/include/MicCapture.h:12:10: error: 'void MicCapture::stop()' marked 'override', but does not override
-   12 |     void stop() override;
-      |          ^~~~
-C:/Users/ausco/audio-capture/include/MicCapture.h:15:10: error: 'void MicCapture::audioThread()' marked 'override', but does not override
-   15 |     void audioThread() override;
-      |          ^~~~~~~~~~~
-mingw32-make[2]: *** [CMakeFiles\audio-capture.dir\build.make:79: CMakeFiles/audio-capture.dir/src/main.cpp.obj] Error 1
-mingw32-make[1]: *** [CMakeFiles\Makefile2:86: CMakeFiles/audio-capture.dir/all] Error 2
-mingw32-make: *** [Makefile:90: all] Error 2
+PS C:\Users\ausco\audio-capture\build> .\audio-capture.exe
+Starting audio capture...
+Failed to start microphone capture
+PS C:\Users\ausco\audio-capture\build> .\audio-capture.exe
+Starting audio capture...
+Failed to start microphone capture
 PS C:\Users\ausco\audio-capture\build> 
+
+
+
+
+
+
+
+
+
