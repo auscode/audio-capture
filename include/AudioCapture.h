@@ -2,6 +2,8 @@
 
 #include <string>
 #include <cstdint>
+#include "WavWriter.h"
+class WavWriter;
 
 #ifdef _WIN32
     #include <windows.h>

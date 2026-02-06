@@ -1,22 +1,31 @@
-PS C:\Users\ausco\audio-capture\build> cmake --build . > error.txt
-In file included from C:/Users/ausco/audio-capture/include/MicCapture.h:3,
-                 from C:\Users\ausco\audio-capture\src\main.cpp:4:
-C:/Users/ausco/audio-capture/include/AudioCapture.h:51:5: error: 'WavWriter' does not name a type
-   51 |     WavWriter *m_writer;
-      |     ^~~~~~~~~
-C:\Users\ausco\audio-capture\src\main.cpp: In function 'int main()':
-C:\Users\ausco\audio-capture\src\main.cpp:8:21: error: 'LoopbackCapture' was not declared in this scope
-    8 |     std::unique_ptr<LoopbackCapture> speakerCapture;
-      |                     ^~~~~~~~~~~~~~~
-C:\Users\ausco\audio-capture\src\main.cpp:8:36: error: template argument 1 is invalid     
-    8 |     std::unique_ptr<LoopbackCapture> speakerCapture;
-      |                                    ^
-C:\Users\ausco\audio-capture\src\main.cpp:8:36: error: template argument 2 is invalid     
-C:\Users\ausco\audio-capture\src\main.cpp:17:55: error: no matching function for call to make_unique<LoopbackCapture>()'
-   17 |     speakerCapture = std::make_unique<LoopbackCapture>();
-      |                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~
-C:\Users\ausco\audio-capture\src\main.cpp:17:55: note: there are 3 candidates
-In file included from C:/ProgramData/mingw64/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/c++/memory:80,
-                 from C:\Users\ausco\audio-capture\src\main.cpp:2:
-C:/ProgramData/mingw64/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/c++/bits/unique_ptr.h:1084:5: note: candidate 1: 'template<class _Tp, class ... _Args> std::__detail::__unique_ptr_t<_Tp> std::make_unique(_Args&& ...)'
- 1084 |     make_unique(_Args&&... __args)
+PS C:\Users\ausco\audio-capture\build> cmake --build .
+[ 14%] Building CXX object CMakeFiles/audio-capture.dir/src/AudioCapture.cpp.obj
+In file included from C:\Users\ausco\audio-capture\src\AudioCapture.cpp:1:
+C:/Users/ausco/audio-capture/include/AudioCapture.h:14:13: warning: 'PLATFORM_WINDOWS' redefined
+   14 |     #define PLATFORM_WINDOWS
+      |             ^~~~~~~~~~~~~~~~
+<command-line>: note: this is the location of the previous definition
+C:\Users\ausco\audio-capture\src\AudioCapture.cpp: In destructor 'virtual AudioCapture::~AudioCapture()':
+C:\Users\ausco\audio-capture\src\AudioCapture.cpp:21:9: warning: pure virtual 'virtual void AudioCapture::stop()' called from destructor
+   21 |     stop();
+      |     ~~~~^~
+C:\Users\ausco\audio-capture\src\AudioCapture.cpp: At global scope:
+C:\Users\ausco\audio-capture\src\AudioCapture.cpp:35:6: error: no declaration matches 'bool AudioCapture::initializeWaveIn(const std::string&)'
+   35 | bool AudioCapture::initializeWaveIn(const std::string &outputFile)
+      |      ^~~~~~~~~~~~
+C:/Users/ausco/audio-capture/include/AudioCapture.h:39:10: note: candidate is: 'bool AudioCapture::initializeWaveIn()'
+   39 |     bool initializeWaveIn();
+      |          ^~~~~~~~~~~~~~~~
+C:/Users/ausco/audio-capture/include/AudioCapture.h:23:7: note: 'class AudioCapture' defined here
+   23 | class AudioCapture {
+      |       ^~~~~~~~~~~~
+C:\Users\ausco\audio-capture\src\AudioCapture.cpp:80:6: error: no declaration matches 'void AudioCapture::startInternal()'
+   80 | void AudioCapture::startInternal()
+      |      ^~~~~~~~~~~~
+C:\Users\ausco\audio-capture\src\AudioCapture.cpp:80:6: note: no functions named 'void AudioCapture::startInternal()'
+C:/Users/ausco/audio-capture/include/AudioCapture.h:23:7: note: 'class AudioCapture' defined here
+   23 | class AudioCapture {
+      |       ^~~~~~~~~~~~
+mingw32-make[2]: *** [CMakeFiles\audio-capture.dir\build.make:94: CMakeFiles/audio-capture.dir/src/AudioCapture.cpp.obj] Error 1
+mingw32-make[1]: *** [CMakeFiles\Makefile2:86: CMakeFiles/audio-capture.dir/all] Error 2
+mingw32-make: *** [Makefile:90: all] Error 2

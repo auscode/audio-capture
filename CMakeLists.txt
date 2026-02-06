@@ -6,6 +6,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Platform-specific setup
 if(WIN32)
+    add_compile_definitions(PLATFORM_WINDOWS)
     add_definitions(-DWIN32_LEAN_AND_MEAN)
     add_definitions(-DNOMINMAX)
     add_definitions(-D_CRT_SECURE_NO_WARNINGS)
@@ -34,6 +35,7 @@ set(HEADERS
 )
 
 add_executable(audio-capture ${SOURCES} ${HEADERS})
+
 
 if(WIN32)
     target_link_libraries(audio-capture 
