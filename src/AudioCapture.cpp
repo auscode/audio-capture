@@ -18,7 +18,6 @@ AudioCapture::AudioCapture()
 
 AudioCapture::~AudioCapture()
 {
-    stop();
     cleanup();
 }
 
@@ -57,7 +56,7 @@ bool AudioCapture::initializeWaveIn()
         return false;
     }
 
-    m_writer = new WavWriter(outputFile, 44100, 2, 16);
+    m_writer = new WavWriter(m_outputFile, 44100, 2, 16);
     if (!m_writer->initialize())
     {
         return false;

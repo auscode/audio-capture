@@ -29,9 +29,10 @@ public:
     virtual void stop() = 0;
     virtual bool isRunning() const;
 
-protected:
+    protected:
     void cleanup();
     virtual void audioThread() = 0;
+    void AudioCapture::startInternal();
 
     std::string m_outputFile;
 
