@@ -11,7 +11,7 @@ class WavWriter;
     #include <mmsystem.h>
     #include <thread>
     #include <atomic>
-    #define PLATFORM_WINDOWS
+    //#define PLATFORM_WINDOWS
 #else
     #include <thread>
     #include <atomic>

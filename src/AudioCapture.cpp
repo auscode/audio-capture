@@ -32,7 +32,7 @@ bool AudioCapture::isRunning() const
 }
 
 #ifdef PLATFORM_WINDOWS
-bool AudioCapture::initializeWaveIn(const std::string &outputFile)
+bool AudioCapture::initializeWaveIn()
 {
     // PCM 16-bit stereo 44.1kHz
     m_waveFormat.wFormatTag = WAVE_FORMAT_PCM;
