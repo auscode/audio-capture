@@ -14,7 +14,7 @@ bool MicCapture::start() {
     if (!initializeWaveIn()) {
         return false;
     }
-
+    startInternal();
     // Open wave in device for microphone recording
     MMRESULT result = waveInOpen(&m_hWaveIn, WAVE_MAPPER, &m_waveFormat, 
                                 (DWORD_PTR)waveInProc, (DWORD_PTR)this, 

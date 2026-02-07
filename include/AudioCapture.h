@@ -42,6 +42,13 @@ protected:
     
     static DWORD WINAPI audioThreadProc(LPVOID lpParam);
     static void CALLBACK waveInProc(HWAVEIN hwi, UINT uMsg, DWORD_PTR dwInstance, DWORD_PTR dwParam1, DWORD_PTR dwParam2);
+    static constexpr int BUFFER_COUNT = 4;
+    static constexpr int BUFFER_SIZE = 4096;
+
+    WAVEHDR m_headers[BUFFER_COUNT];
+    BYTE m_buffers[BUFFER_COUNT][BUFFER_SIZE];
+
+    WavWriter *m_writer;
 #else
     std::thread* m_pThread;
     std::atomic<bool> m_bRunning;

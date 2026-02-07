@@ -2,120 +2,182 @@
 #include "WavWriter.h"
 #include "Utils.h"
 #include <iostream>
+#include <thread>
 
-LoopbackCapture::LoopbackCapture(const std::string& outputFile) 
-    : m_outputFile(outputFile) {
+#ifdef PLATFORM_WINDOWS
+
+#include <windows.h>
+#include <functiondiscoverykeys_devpkey.h>
+
+LoopbackCapture::LoopbackCapture(const std::string &outputFile)
+    : m_outputFile(outputFile) {}
+
+LoopbackCapture::~LoopbackCapture()
+{
+    stop();
 }
 
-bool LoopbackCapture::start() {
-    Utils::createDirectory("output");
-    
-#ifdef PLATFORM_WINDOWS
-    if (!initializeWaveIn()) {
+bool LoopbackCapture::initialize()
+{
+    HRESULT hr;
+
+    hr = CoInitialize(nullptr);
+    if (FAILED(hr))
+    {
+        std::cerr << "CoInitialize failed\n";
         return false;
     }
 
-    // Open wave in device for loopback recording
-    MMRESULT result = waveInOpen(&m_hWaveIn, WAVE_MAPPER, &m_waveFormat, 
-                                (DWORD_PTR)waveInProc, (DWORD_PTR)this, 
-                                CALLBACK_FUNCTION);
-    
-    if (result != MMSYSERR_NOERROR) {
-        std::cerr << "Failed to open wave in device: " << result << std::endl;
+    IMMDeviceEnumerator *enumerator = nullptr;
+    hr = CoCreateInstance(
+        __uuidof(MMDeviceEnumerator),
+        nullptr,
+        CLSCTX_ALL,
+        __uuidof(IMMDeviceEnumerator),
+        (void **)&enumerator);
+    if (FAILED(hr))
         return false;
-    }
 
-    m_bRunning = true;
-    m_hThread = CreateThread(nullptr, 0, audioThreadProc, this, 0, nullptr);
-    
-    return m_hThread != nullptr;
-#else
-    // Linux stub implementation - just creates a silent WAV file
-    m_bRunning = true;
-    m_pThread = new std::thread(audioThreadProc, this);
+    hr = enumerator->GetDefaultAudioEndpoint(eRender, eConsole, &m_device);
+    enumerator->Release();
+    if (FAILED(hr))
+        return false;
+
+    hr = m_device->Activate(
+        __uuidof(IAudioClient),
+        CLSCTX_ALL,
+        nullptr,
+        (void **)&m_audioClient);
+    if (FAILED(hr))
+        return false;
+
+    hr = m_audioClient->GetMixFormat(&m_waveFormat);
+    if (FAILED(hr))
+        return false;
+
+    hr = m_audioClient->Initialize(
+        AUDCLNT_SHAREMODE_SHARED,
+        AUDCLNT_STREAMFLAGS_LOOPBACK,
+        0,
+        0,
+        m_waveFormat,
+        nullptr);
+    if (FAILED(hr))
+        return false;
+
+    hr = m_audioClient->GetService(
+        __uuidof(IAudioCaptureClient),
+        (void **)&m_captureClient);
+    if (FAILED(hr))
+        return false;
+
     return true;
-#endif
 }
 
-void LoopbackCapture::stop() {
-    m_bRunning = false;
-    
-#ifdef PLATFORM_WINDOWS
-    if (m_hWaveIn) {
-        waveInStop(m_hWaveIn);
-        waveInReset(m_hWaveIn);
+bool LoopbackCapture::start()
+{
+    Utils::createDirectory("output");
+
+    if (!initialize())
+    {
+        std::cerr << "Loopback init failed\n";
+        return false;
     }
-    
-    if (m_hThread) {
-        WaitForSingleObject(m_hThread, 5000);
-        CloseHandle(m_hThread);
-        m_hThread = nullptr;
-    }
-#else
-    if (m_pThread) {
-        m_pThread->join();
-        delete m_pThread;
-        m_pThread = nullptr;
-    }
-#endif
+
+    HRESULT hr = m_audioClient->Start();
+    if (FAILED(hr))
+        return false;
+
+    m_running = true;
+    std::thread(&LoopbackCapture::captureLoop, this).detach();
+    return true;
 }
 
-void LoopbackCapture::audioThread() {
-    WavWriter writer(m_outputFile, 44100, 2, 16);
-    if (!writer.initialize()) {
-        std::cerr << "Failed to initialize WAV writer" << std::endl;
+void LoopbackCapture::stop()
+{
+    m_running = false;
+
+    if (m_audioClient)
+    {
+        m_audioClient->Stop();
+        m_audioClient->Release();
+        m_audioClient = nullptr;
+    }
+
+    if (m_captureClient)
+    {
+        m_captureClient->Release();
+        m_captureClient = nullptr;
+    }
+
+    if (m_device)
+    {
+        m_device->Release();
+        m_device = nullptr;
+    }
+
+    if (m_waveFormat)
+    {
+        CoTaskMemFree(m_waveFormat);
+        m_waveFormat = nullptr;
+    }
+
+    CoUninitialize();
+}
+
+void LoopbackCapture::captureLoop()
+{
+    WavWriter writer(
+        m_outputFile,
+        m_waveFormat->nSamplesPerSec,
+        m_waveFormat->nChannels,
+        m_waveFormat->wBitsPerSample);
+
+    if (!writer.initialize())
+    {
+        std::cerr << "Failed to init WAV writer\n";
         return;
     }
 
-#ifdef PLATFORM_WINDOWS
-    // Windows-specific audio capture implementation
-    const int BUFFER_SIZE = 4096;
-    WAVEHDR* waveHeaders = new WAVEHDR[2];
-    BYTE* buffers = new BYTE[BUFFER_SIZE * 2];
-    
-    // Prepare wave headers
-    for (int i = 0; i < 2; i++) {
-        waveHeaders[i].lpData = (LPSTR)(buffers + i * BUFFER_SIZE);
-        waveHeaders[i].dwBufferLength = BUFFER_SIZE;
-        waveHeaders[i].dwFlags = 0;
-        waveInPrepareHeader(m_hWaveIn, &waveHeaders[i], sizeof(WAVEHDR));
-        waveInAddBuffer(m_hWaveIn, &waveHeaders[i], sizeof(WAVEHDR));
+    while (m_running)
+    {
+        UINT32 packetLength = 0;
+        HRESULT hr = m_captureClient->GetNextPacketSize(&packetLength);
+        if (FAILED(hr))
+            break;
+
+        while (packetLength > 0)
+        {
+            BYTE *data;
+            UINT32 frames;
+            DWORD flags;
+
+            hr = m_captureClient->GetBuffer(
+                &data,
+                &frames,
+                &flags,
+                nullptr,
+                nullptr);
+            if (FAILED(hr))
+                break;
+
+            if (!(flags & AUDCLNT_BUFFERFLAGS_SILENT))
+            {
+                writer.write(
+                    data,
+                    frames * m_waveFormat->nBlockAlign);
+            }
+
+            m_captureClient->ReleaseBuffer(frames);
+            hr = m_captureClient->GetNextPacketSize(&packetLength);
+            if (FAILED(hr))
+                break;
+        }
+
+        Utils::sleep(5);
     }
-    
-    // Start recording
-    waveInStart(m_hWaveIn);
-    
-    while (m_bRunning) {
-        Utils::sleep(10);
-    }
-    
-    // Clean up
-    waveInStop(m_hWaveIn);
-    waveInReset(m_hWaveIn);
-    
-    for (int i = 0; i < 2; i++) {
-        waveInUnprepareHeader(m_hWaveIn, &waveHeaders[i], sizeof(WAVEHDR));
-    }
-    
-    delete[] waveHeaders;
-    delete[] buffers;
-    
-    // Write some dummy data for demonstration
-    const char silence[BUFFER_SIZE] = {0};
-    for (int i = 0; i < 100 && m_bRunning; i++) {
-        writer.write((const uint8_t*)silence, BUFFER_SIZE);
-        Utils::sleep(10);
-    }
-#else
-    // Linux stub - create a silent WAV file
-    const int BUFFER_SIZE = 4096;
-    char silence[BUFFER_SIZE] = {0};
-    
-    for (int i = 0; i < 100 && m_bRunning.load(); i++) {
-        writer.write((const uint8_t*)silence, BUFFER_SIZE);
-        Utils::sleep(10);
-    }
-#endif
 
     writer.finalize();
 }
+
+#endif
