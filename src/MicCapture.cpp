@@ -3,8 +3,11 @@
 #include "WavWriter.h"
 #include <iostream>
 
-MicCapture::MicCapture(const std::string &outputFile)
-    : m_outputFile(outputFile) {}
+MicCapture::MicCapture(const std::string &outputFile) : AudioCapture() {
+  std::cout << "[MicCapture] Constructor called with output file: "
+            << outputFile << std::endl;
+  m_outputFile = outputFile; // Set the base class member
+}
 
 bool MicCapture::start() {
   std::cout << "[MicCapture] Starting microphone capture..." << std::endl;
