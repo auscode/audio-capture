@@ -31,7 +31,7 @@ public:
 
     protected:
     void cleanup();
-    virtual void audioThread() = 0;
+    virtual void audioThread(){};
     void startInternal();
 
     std::string m_outputFile;

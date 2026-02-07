@@ -12,6 +12,6 @@ public:
     void stop() override;
 
 private:
-    void audioThread() override;
+    //void audioThread() override;
     std::string m_outputFile;
 };
